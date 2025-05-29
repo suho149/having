@@ -13,6 +13,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
     // provider + providerId 로 사용자 조회 (OAuth2 전용)
     Optional<User> findByProviderAndProviderId(String provider, String providerId);
 
+    Optional<User> findByNickname(String nickname);
+
     // 닉네임 중복 검사
     boolean existsByNickname(String nickname);
 }

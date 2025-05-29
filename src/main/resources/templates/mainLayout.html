@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org" xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title layout:title-pattern="$LAYOUT_TITLE - $CONTENT_TITLE">StudyGroup</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body { padding-top: 56px; background-color: #f8f9fa; } /* Adjust if navbar height changes */
+        .navbar-brand-custom { font-weight: bold; color: #fff !important; }
+        .footer { background-color: #343a40; color: white; padding: 1rem 0; text-align: center; margin-top: auto;}
+        html, body { height: 100%; }
+        body { display: flex; flex-direction: column; }
+        .content-wrapper { flex: 1 0 auto; }
+
+    </style>
+</head>
+<body>
+
+<nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
+    <div class="container-fluid">
+        <a class="navbar-brand navbar-brand-custom" th:href="@{/}"><i class="fas fa-users me-2"></i>StudyGroup</a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
+                aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navbarNav">
+            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/dashboard}" sec:authorize="isAuthenticated()">대시보드</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/study-groups}">스터디 목록</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" th:href="@{/study-groups/new}" sec:authorize="isAuthenticated()">새 스터디 만들기</a>
+                </li>
+            </ul>
+            <ul class="navbar-nav">
+                <li class="nav-item" sec:authorize="!isAuthenticated()">
+                    <a class="nav-link" th:href="@{/login}">로그인</a>
+                </li>
+                <li class="nav-item dropdown" sec:authorize="isAuthenticated()">
+                    <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownUser" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class="fas fa-user-circle me-1"></i><span sec:authentication="principal.user.nickname">사용자</span>
+                    </a>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdownUser">
+                        <li><a class="dropdown-item" th:href="@{/profile}">프로필</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <form th:action="@{/logout}" method="post" class="d-inline">
+                                <button type="submit" class="dropdown-item">로그아웃</button>
+                            </form>
+                        </li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+    </div>
+</nav>
+
+<div class="content-wrapper container-fluid">
+    <th:block layout:fragment="content"></th:block>
+</div>
+
+<footer class="footer">
+    <div class="container">
+        <span>&copy; 2024-2025 StudyGroup. All Rights Reserved.</span>
+    </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+<th:block layout:fragment="script"></th:block> </body>
+</html>

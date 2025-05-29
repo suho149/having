@@ -40,4 +40,11 @@ public class User {
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private LocalDateTime deletedAt;
+
+    // OAuth2 로그인 시 사용자 정보 업데이트 메서드
+    public User update(String nickname, String profileImageUrl) {
+        this.nickname = nickname;
+        this.profileImageUrl = profileImageUrl;
+        return this;
+    }
 }
