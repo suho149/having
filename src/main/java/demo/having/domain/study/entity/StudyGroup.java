@@ -100,10 +100,10 @@ public class StudyGroup extends BaseTimeEntity {
                 .collect(Collectors.toSet());
     }
 
-    // StudyGroup 정보 업데이트 메서드 (필요하다면)
+    // StudyGroup 정보 업데이트 메서드 (기존 메서드 수정)
     public void updateStudyGroup(String name, String description, int maxMembers,
                                  LocationType locationType, String locationDetail,
-                                 LocalDate startDate, LocalDate endDate) {
+                                 LocalDate startDate, LocalDate endDate, StudyGroupStatus status) { // StudyGroupStatus status 추가
         this.name = name;
         this.description = description;
         this.maxMembers = maxMembers;
@@ -111,10 +111,11 @@ public class StudyGroup extends BaseTimeEntity {
         this.locationDetail = locationDetail;
         this.startDate = startDate;
         this.endDate = endDate;
+        this.status = status; // 상태 업데이트
     }
 
-    // 상태 변경 메서드 (필요하다면)
-    public void changeStatus(StudyGroupStatus status) {
-        this.status = status;
+    // StudyGroupTag 엔티티 컬렉션을 초기화하는 메서드 추가
+    public void clearStudyGroupTags() {
+        this.studyGroupTags.clear();
     }
 }

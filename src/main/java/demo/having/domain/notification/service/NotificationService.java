@@ -29,5 +29,21 @@ public class NotificationService {
         notificationRepository.save(notification);
     }
 
+    // --- 스터디 가입 요청 알림 메소드 추가 ---
+    @Transactional
+    public void createStudyJoinRequestNotification(User requester, User leader, StudyGroup studyGroup) {
+        String message = String.format("'%s'님이 '%s' 스터디 가입을 요청했습니다.", requester.getNickname(), studyGroup.getName());
+        Notification notification = Notification.builder()
+                .user(leader) // 알림을 받을 사용자 (스터디 리더)
+                .type(NotificationType.STUDY_JOIN_REQUEST) // 새로운 알림 타입 필요
+                .message(message)
+                .relatedResourceType("StudyGroup")
+                .relatedResourceId(studyGroup.getStudyGroupId())
+                .isRead(false)
+                .build();
+        notificationRepository.save(notification);
+    }
+    // --- 추가 끝 ---
+
     // 다른 알림 생성 메서드 (예: 메시지 알림, 일정 알림 등)는 여기에 추가
 }

@@ -1,5 +1,6 @@
 package demo.having.domain.study.repository;
 
+import demo.having.domain.study.entity.ApprovalStatus;
 import demo.having.domain.study.entity.StudyGroup;
 import demo.having.domain.study.entity.StudyMember;
 import demo.having.domain.user.entity.User;
@@ -29,4 +30,8 @@ public interface StudyMemberRepository extends JpaRepository<StudyMember, Long> 
     // 사용자가 참여한 스터디 그룹과 해당 스터디 그룹의 리더를 한 번의 쿼리로 가져오도록 FETCH JOIN 사용
     @Query("SELECT sm FROM StudyMember sm JOIN FETCH sm.studyGroup sg JOIN FETCH sg.leader WHERE sm.user = :user ORDER BY sm.joinDate DESC")
     List<StudyMember> findByUserWithStudyGroupAndLeader(@Param("user") User user); // 메서드명 변경 및 @Param 추가
+
+    // --- 사용자의 승인된 스터디 멤버 목록을 스터디 그룹과 함께 가져오는 메소드 추가 ---
+    @Query("SELECT sm FROM StudyMember sm JOIN FETCH sm.studyGroup WHERE sm.user = :user AND sm.approvalStatus = :approvalStatus ORDER BY sm.joinDate DESC")
+    List<StudyMember> findByUserAndApprovalStatusWithStudyGroup(@Param("user") User user, @Param("approvalStatus") ApprovalStatus approvalStatus);
 }

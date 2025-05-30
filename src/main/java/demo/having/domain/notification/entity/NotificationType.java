@@ -5,5 +5,6 @@ public enum NotificationType {
     NEW_MESSAGE,
     SCHEDULE_UPDATED,
     NEW_MEMBER_JOINED,
+    STUDY_JOIN_REQUEST,
     // ... (기존 타입)
 }

@@ -1,13 +1,19 @@
 package demo.having.domain.study.controller;
 
 import demo.having.domain.study.dto.request.StudyGroupCreateDto;
+import demo.having.domain.study.dto.request.StudyGroupUpdateDto;
 import demo.having.domain.study.entity.LocationType;
 import demo.having.domain.study.entity.StudyGroup;
+import demo.having.domain.study.entity.StudyGroupStatus;
 import demo.having.domain.study.service.StudyGroupService;
 import demo.having.domain.user.entity.CustomOAuth2User;
 import demo.having.domain.user.entity.User;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -17,6 +23,8 @@ import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 @Controller
 @RequestMapping("/study-groups")
@@ -73,6 +81,118 @@ public class StudyGroupController {
         }
     }
 
+    // 스터디 편집 폼 페이지 (리더만 접근 가능)
+    @GetMapping("/{studyGroupId}/manage") // 경로를 /manage로 수정했습니다.
+    public String editStudyGroupForm(@PathVariable Long studyGroupId,
+                                     Model model,
+                                     @AuthenticationPrincipal CustomOAuth2User principal,
+                                     RedirectAttributes redirectAttributes) {
+        if (principal == null || principal.getUser() == null) {
+            redirectAttributes.addFlashAttribute("errorMessage", "로그인이 필요합니다.");
+            return "redirect:/login";
+        }
+        User currentUser = principal.getUser();
+
+        try {
+            StudyGroup studyGroup = studyGroupService.getStudyGroupById(studyGroupId);
+
+            // 현재 사용자가 스터디 리더인지 확인
+            if (!studyGroupService.isUserStudyLeader(studyGroup, currentUser)) {
+                redirectAttributes.addFlashAttribute("errorMessage", "스터디를 관리할 권한이 없습니다.");
+                return "redirect:/study-groups/" + studyGroupId;
+            }
+
+            // StudyGroup 엔티티의 현재 정보를 StudyGroupUpdateDto로 변환하여 폼에 미리 채워줍니다.
+            StudyGroupUpdateDto updateDto = new StudyGroupUpdateDto();
+            updateDto.setStudyGroupId(studyGroup.getStudyGroupId());
+            updateDto.setName(studyGroup.getName());
+            updateDto.setDescription(studyGroup.getDescription());
+            // 현재 태그들을 문자열 리스트로 변환하여 DTO에 설정 (Thymeleaf 폼 처리를 위해)
+            List<String> currentTags = studyGroup.getStudyGroupTags().stream()
+                    .map(sgt -> sgt.getTag().getName())
+                    .collect(Collectors.toList());
+            updateDto.setTags(currentTags);
+            updateDto.setMaxMembers(studyGroup.getMaxMembers());
+            updateDto.setLocationType(studyGroup.getLocationType());
+            updateDto.setLocationDetail(studyGroup.getLocationDetail());
+            updateDto.setStartDate(studyGroup.getStartDate());
+            updateDto.setEndDate(studyGroup.getEndDate());
+            updateDto.setStatus(studyGroup.getStatus());
+
+            model.addAttribute("studyGroupUpdateDto", updateDto);
+            model.addAttribute("locationTypes", LocationType.values());
+            model.addAttribute("studyGroupStatuses", StudyGroupStatus.values()); // 스터디 상태 Enum 전달
+            model.addAttribute("studyGroup", studyGroup); // 스터디 상세 정보 (리더 여부 확인 등)
+            return "studyGroup/studyGroupEdit"; // templates/studyGroup/studyGroupEdit.html
+        } catch (NoSuchElementException e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "스터디를 찾을 수 없습니다: " + e.getMessage());
+            return "redirect:/study-groups/my-studies";
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "스터디 편집 페이지 로딩 중 오류가 발생했습니다: " + e.getMessage());
+            return "redirect:/study-groups/my-studies";
+        }
+    }
+
+    // 스터디 편집 처리 (리더만 가능)
+    @PostMapping("/{studyGroupId}/manage") // 경로를 /manage로 수정했습니다.
+    public String updateStudyGroup(@PathVariable Long studyGroupId,
+                                   @Valid @ModelAttribute StudyGroupUpdateDto studyGroupUpdateDto,
+                                   BindingResult bindingResult,
+                                   @AuthenticationPrincipal CustomOAuth2User principal,
+                                   RedirectAttributes redirectAttributes,
+                                   Model model) {
+        if (principal == null || principal.getUser() == null) {
+            redirectAttributes.addFlashAttribute("errorMessage", "로그인이 필요합니다.");
+            return "redirect:/login";
+        }
+        User currentUser = principal.getUser();
+
+        // PathVariable의 studyGroupId와 DTO의 studyGroupId가 일치하는지 확인 (보안 강화)
+        if (!studyGroupId.equals(studyGroupUpdateDto.getStudyGroupId())) {
+            redirectAttributes.addFlashAttribute("errorMessage", "잘못된 요청입니다.");
+            return "redirect:/study-groups/my-studies";
+        }
+
+        // 폼 유효성 검사
+        if (bindingResult.hasErrors()) {
+            model.addAttribute("locationTypes", LocationType.values());
+            model.addAttribute("studyGroupStatuses", StudyGroupStatus.values());
+            // 기존 스터디 정보를 다시 불러와 모델에 추가 (폼 재렌더링 시 필요)
+            try {
+                StudyGroup studyGroup = studyGroupService.getStudyGroupById(studyGroupId);
+                model.addAttribute("studyGroup", studyGroup);
+            } catch (NoSuchElementException e) {
+                redirectAttributes.addFlashAttribute("errorMessage", "스터디를 찾을 수 없습니다.");
+                return "redirect:/study-groups/my-studies";
+            }
+            return "studyGroup/studyGroupEdit";
+        }
+
+        try {
+            StudyGroup updatedStudyGroup = studyGroupService.updateStudyGroup(studyGroupUpdateDto, currentUser);
+            redirectAttributes.addFlashAttribute("successMessage", "스터디 그룹 '" + updatedStudyGroup.getName() + "'이 성공적으로 업데이트되었습니다!");
+            return "redirect:/study-groups/" + updatedStudyGroup.getStudyGroupId(); // 업데이트된 스터디 상세 페이지로 리다이렉트
+        } catch (NoSuchElementException e) {
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+            return "redirect:/study-groups/my-studies";
+        } catch (IllegalAccessException e) { // 리더 권한 없음 예외
+            redirectAttributes.addFlashAttribute("errorMessage", e.getMessage());
+            return "redirect:/study-groups/" + studyGroupId;
+        } catch (Exception e) {
+            redirectAttributes.addFlashAttribute("errorMessage", "스터디 그룹 업데이트 중 오류가 발생했습니다: " + e.getMessage());
+            model.addAttribute("locationTypes", LocationType.values());
+            model.addAttribute("studyGroupStatuses", StudyGroupStatus.values());
+            // 오류 발생 시 기존 스터디 정보 다시 로드
+            try {
+                StudyGroup studyGroup = studyGroupService.getStudyGroupById(studyGroupId);
+                model.addAttribute("studyGroup", studyGroup);
+            } catch (NoSuchElementException ex) {
+                // 이 경우는 발생하기 어려움 (이미 위에서 찾았으므로)
+            }
+            return "studyGroup/studyGroupEdit";
+        }
+    }
+
     @GetMapping("/{studyGroupId}")
     public String getStudyGroupDetail(@PathVariable Long studyGroupId,
                                       Model model,
@@ -110,7 +230,6 @@ public class StudyGroupController {
         }
     }
 
-    // --- 스터디 가입/탈퇴 기능 (추후 구현) ---
     @PostMapping("/{studyGroupId}/join")
     public String joinStudyGroup(@PathVariable Long studyGroupId,
                                  @AuthenticationPrincipal CustomOAuth2User principal,
@@ -124,7 +243,7 @@ public class StudyGroupController {
         try {
             StudyGroup studyGroup = studyGroupService.getStudyGroupById(studyGroupId);
             studyGroupService.joinStudyGroup(studyGroup, currentUser);
-            redirectAttributes.addFlashAttribute("successMessage", "'" + studyGroup.getName() + "' 스터디에 성공적으로 가입했습니다!");
+            redirectAttributes.addFlashAttribute("successMessage", "'" + studyGroup.getName() + "' 스터디에 가입 요청을 보냈습니다. 리더의 승인을 기다려주세요.");
         } catch (NoSuchElementException e) {
             redirectAttributes.addFlashAttribute("errorMessage", "스터디를 찾을 수 없습니다: " + e.getMessage());
         } catch (IllegalStateException e) {
@@ -132,7 +251,7 @@ public class StudyGroupController {
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", "스터디 가입 중 오류가 발생했습니다: " + e.getMessage());
         }
-        return "redirect:/studies/" + studyGroupId;
+        return "redirect:/study-groups/" + studyGroupId; // 수정: studies -> study-groups
     }
 
     @PostMapping("/{studyGroupId}/leave")
@@ -156,7 +275,7 @@ public class StudyGroupController {
         } catch (Exception e) {
             redirectAttributes.addFlashAttribute("errorMessage", "스터디 탈퇴 중 오류가 발생했습니다: " + e.getMessage());
         }
-        return "redirect:/studies/" + studyGroupId;
+        return "redirect:/study-groups/" + studyGroupId; // 수정: studies -> study-groups
     }
 
     // 내 스터디 목록 페이지
@@ -172,6 +291,30 @@ public class StudyGroupController {
         model.addAttribute("myStudyGroups", myStudyGroups);
         model.addAttribute("currentUser", currentUser); // 템플릿에서 사용자 정보 활용을 위해
         return "studyGroup/myStudies"; // templates/studyGroup/myStudies.html
+    }
+
+    // 스터디 검색 및 전체 목록 조회
+    @GetMapping
+    public String searchStudyGroups(@RequestParam(name = "keyword", required = false) String keyword,
+                                    @RequestParam(name = "tags", required = false) List<String> tags,
+                                    @PageableDefault(size = 10, sort = "createdAt", direction = Sort.Direction.DESC) Pageable pageable,
+                                    Model model) {
+
+        Page<StudyGroup> studyGroupPage = studyGroupService.searchStudyGroups(keyword, tags, pageable);
+
+        model.addAttribute("studyGroupPage", studyGroupPage);
+        model.addAttribute("keyword", keyword); // 검색어 유지
+        model.addAttribute("selectedTags", tags); // 선택된 태그 유지
+
+        int totalPages = studyGroupPage.getTotalPages();
+        if (totalPages > 0) {
+            List<Integer> pageNumbers = IntStream.rangeClosed(1, totalPages)
+                    .boxed()
+                    .collect(Collectors.toList());
+            model.addAttribute("pageNumbers", pageNumbers);
+        }
+
+        return "studyGroup/studyGroupList"; // 스터디 목록을 보여줄 Thymeleaf 템플릿
     }
 
 }
