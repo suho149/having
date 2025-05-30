@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layout/layout}">
+<head>
+    <title>스터디 찾기 - StudyGroup</title>
+    <style>
+        /* 기본 레이아웃 및 배경 */
+        body {
+            background-color: #f0f2f5;
+            font-family: 'Noto Sans KR', sans-serif;
+        }
+        .container {
+            padding-top: 50px;
+            padding-bottom: 50px;
+        }
+        h2 {
+            font-size: 2.5rem;
+            color: #2c3e50;
+            margin-bottom: 30px;
+            font-weight: 800;
+        }
+        hr {
+            border-top: 1px solid rgba(0,0,0,0.1);
+            margin-bottom: 60px;
+        }
+
+        /* 검색 폼 스타일 */
+        .search-form-container {
+            background: linear-gradient(135deg, #e0f2f7 0%, #d1e8ef 100%);
+            border-radius: 18px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+            padding: 30px;
+            margin-bottom: 50px;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+            display: flex;
+            align-items: flex-end;
+            gap: 15px;
+            max-width: 900px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .search-form-container form {
+            display: flex;
+            align-items: flex-end;
+            gap: 15px;
+            width: 100%;
+        }
+        .search-form-group {
+            flex: 1;
+        }
+        .search-form-group.button-col {
+            flex-grow: 0;
+            flex-basis: 120px;
+        }
+        @media (max-width: 768px) {
+            .search-form-container {
+                padding: 25px;
+                max-width: 100%;
+            }
+            .search-form-container form {
+                flex-direction: column;
+                align-items: stretch;
+                gap: 10px;
+            }
+            .search-form-group {
+                width: 100%;
+            }
+            .search-form-group.button-col {
+                flex-basis: auto;
+            }
+        }
+
+        .search-form-container .form-label {
+            color: #34495e;
+            font-size: 1rem;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+        .search-form-container .form-control {
+            border-radius: 10px;
+            border: 1px solid #ced4da;
+            padding: 10px 15px;
+            font-size: 0.95rem;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.06);
+        }
+        .search-form-container .form-control:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 0.25rem rgba(102, 126, 234, 0.25), inset 0 1px 3px rgba(0,0,0,0.08);
+        }
+        .search-form-container .btn-primary {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            border: none;
+            border-radius: 10px;
+            font-size: 1.05rem;
+            padding: 10px 20px;
+            transition: all 0.3s ease;
+            width: 100%;
+            font-weight: 600;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        }
+        .search-form-container .btn-primary:hover {
+            opacity: 0.9;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(0,0,0,0.25);
+        }
+
+        /* 스터디 카드 컨테이너 - 그리드 시스템 강화 */
+        .study-cards-container {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.5rem;
+        }
+
+        @media (max-width: 1200px) {
+            .study-cards-container {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        @media (max-width: 992px) {
+            .study-cards-container {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 576px) {
+            .study-cards-container {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* 스터디 카드 스타일 */
+        .study-card {
+            background-color: #ffffff;
+            border: none;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.08);
+            transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+            border-radius: 15px;
+            overflow: hidden;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+        .study-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.15);
+        }
+        .card-body {
+            padding: 25px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            flex-grow: 1;
+            min-height: 350px; /* 최소 높이 설정으로 카드 높이 통일 */
+        }
+        .card-content-top {
+            flex-grow: 1;
+        }
+        .card-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: #4a4a4a;
+            margin-bottom: 12px;
+            line-height: 1.4;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            height: 3.6em; /* 2줄 고정 높이 */
+        }
+        .card-text {
+            color: #777;
+            line-height: 1.6;
+            margin-bottom: 15px;
+            font-size: 0.9rem;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            height: 4.8em; /* 3줄 고정 높이 */
+        }
+        .list-unstyled {
+            list-style: none;
+            padding-left: 0;
+            margin-bottom: 15px;
+        }
+        .list-unstyled li {
+            margin-bottom: 8px;
+            color: #555;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+        }
+        .list-unstyled li i {
+            color: #764ba2;
+            width: 20px;
+            text-align: center;
+            font-size: 1rem;
+            margin-right: 8px;
+        }
+        .study-tags {
+            margin-top: 15px;
+            margin-bottom: 20px;
+            min-height: 2.5em; /* 태그 영역 최소 높이 설정 */
+        }
+        .study-tags .badge {
+            background-color: #e0f7fa;
+            color: #00796b;
+            font-weight: 600;
+            padding: 6px 10px;
+            border-radius: 15px;
+            margin-right: 6px;
+            margin-bottom: 6px;
+            border: 1px solid #b2ebf2;
+            font-size: 0.8rem;
+        }
+        .study-tags .badge.bg-secondary {
+            background-color: #e9ecef !important;
+            color: #6c757d !important;
+            border: 1px solid #d0d7de !important;
+        }
+        .study-card .btn-outline-primary {
+            border-color: #667eea;
+            color: #667eea;
+            border-radius: 8px;
+            padding: 8px 18px;
+            font-weight: 600;
+            align-self: flex-start;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+            margin-top: auto; /* 하단 고정 */
+        }
+        .study-card .btn-outline-primary:hover {
+            background-color: #667eea;
+            color: white;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        /* 페이징 스타일 */
+        .pagination {
+            margin-top: 70px;
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            list-style: none;
+            padding-left: 0;
+        }
+        .pagination .page-item .page-link {
+            border-radius: 12px !important;
+            min-width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #667eea;
+            border: 1px solid #dee2e6;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+            text-decoration: none;
+        }
+        .pagination .page-item.active .page-link {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            border-color: #764ba2;
+            color: white;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+            transform: translateY(-3px);
+        }
+        .pagination .page-item:not(.active) .page-link:hover {
+            background-color: #eef2ff;
+            color: #764ba2;
+            border-color: #c0c0c0;
+        }
+        .pagination .page-item.disabled .page-link {
+            color: #adb5bd;
+            pointer-events: none;
+            background-color: #f8f9fa;
+            box-shadow: none;
+        }
+
+        /* 결과 없음 알림 */
+        .alert-info {
+            background-color: #e3f2fd;
+            color: #1a237e;
+            border-color: #bbdefb;
+            border-radius: 15px;
+            font-size: 1.1rem;
+            padding: 40px;
+            text-align: center;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+        }
+        .alert-info .alert-heading {
+            color: #0d47a1;
+            font-weight: bold;
+            margin-bottom: 15px;
+            font-size: 1.6rem;
+        }
+        .alert-info p {
+            margin-bottom: 10px;
+            line-height: 1.6;
+        }
+        .alert-info .alert-link {
+            color: #0b2f8a;
+            font-weight: bold;
+            text-decoration: underline;
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+<div layout:fragment="content" class="container">
+    <h2 class="text-center">
+        <i class="fas fa-search me-3"></i> 스터디 찾기
+    </h2>
+
+    <hr>
+
+    <div class="search-form-container">
+        <form th:action="@{/study-groups}" method="get">
+            <div class="search-form-group">
+                <label for="keyword" class="form-label">검색어</label>
+                <input type="text" class="form-control" id="keyword" name="keyword" th:value="${keyword}" placeholder="스터디 이름 또는 설명으로 검색">
+            </div>
+            <div class="search-form-group">
+                <label for="tags" class="form-label">태그 (쉼표로 구분)</label>
+                <input type="text" class="form-control" id="tags" name="tags" th:value="${#strings.arrayJoin(selectedTags, ',')}" placeholder="예: Java, Spring, 알고리즘">
+            </div>
+            <div class="search-form-group button-col d-grid">
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-search me-1"></i> 검색
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <div th:if="${studyGroupPage.isEmpty()}" class="alert alert-info py-5 shadow-sm" role="alert">
+        <h4 class="alert-heading"><i class="fas fa-box-open me-2"></i> 검색 결과 없음</h4>
+        <p>요청하신 검색어 또는 태그와 일치하는 스터디 그룹을 찾을 수 없습니다.</p>
+        <hr>
+        <p class="mb-0">다른 검색어로 다시 시도해 보시거나, <a th:href="@{/study-groups}" class="alert-link">모든 스터디 보기</a>를 클릭하여 전체 목록을 확인해보세요.</p>
+    </div>
+
+    <div th:unless="${studyGroupPage.isEmpty()}" class="study-cards-container">
+        <div th:each="studyGroup : ${studyGroupPage.content}">
+            <div class="card study-card shadow">
+                <div class="card-body">
+                    <div class="card-content-top">
+                        <h5 class="card-title" th:text="${studyGroup.name}">스터디 그룹 이름</h5>
+                        <p class="card-text" th:text="${#strings.abbreviate(studyGroup.description, 120)}">스터디에 대한 간략한 설명입니다.</p>
+
+                        <ul class="list-unstyled mb-3">
+                            <li><i class="fas fa-users"></i>
+                                <span th:text="${studyGroup.currentMembersCount} + ' / ' + ${studyGroup.maxMembers} + '명'">0 / 10명</span>
+                            </li>
+                            <li><i class="fas fa-calendar-alt"></i>
+                                기간: <span th:text="${#temporals.format(studyGroup.startDate, 'yyyy-MM-dd')}"></span>
+                                ~ <span th:text="${studyGroup.endDate != null ? #temporals.format(studyGroup.endDate, 'yyyy-MM-dd') : '미정'}"></span>
+                            </li>
+                            <li><i class="fas fa-map-marker-alt"></i>
+                                장소: <span th:text="${studyGroup.locationType.displayName}">온라인</span>
+                                <span th:if="${studyGroup.locationDetail != null and !studyGroup.locationDetail.isEmpty()}"
+                                      th:text="'(' + ${studyGroup.locationDetail} + ')'"></span>
+                            </li>
+                        </ul>
+
+                        <div class="study-tags">
+                            <span th:each="tag : ${studyGroup.tags}" class="badge" th:text="${tag.name}">태그</span>
+                            <span th:if="${#lists.isEmpty(studyGroup.tags)}" class="badge bg-secondary text-white">태그 없음</span>
+                        </div>
+                    </div>
+
+                    <a th:href="@{'/study-groups/' + ${studyGroup.studyGroupId}}" class="btn btn-outline-primary">
+                        상세 보기 <i class="fas fa-arrow-right ms-1"></i>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <nav aria-label="Page navigation" th:if="${studyGroupPage.totalPages > 0}">
+        <ul class="pagination">
+            <li class="page-item" th:classappend="${studyGroupPage.number == 0 ? 'disabled' : ''}">
+                <a class="page-link" th:href="@{/study-groups(page=${studyGroupPage.number - 1}, keyword=${keyword}, tags=${#strings.arrayJoin(selectedTags, ',')})}"
+                   aria-label="Previous">
+                    <span aria-hidden="true">&laquo;</span>
+                </a>
+            </li>
+            <li class="page-item" th:each="pageNumber : ${pageNumbers}"
+                th:classappend="${pageNumber - 1 == studyGroupPage.number ? 'active' : ''}">
+                <a class="page-link" th:href="@{/study-groups(page=${pageNumber - 1}, keyword=${keyword}, tags=${#strings.arrayJoin(selectedTags, ',')})}"
+                   th:text="${pageNumber}">1</a>
+            </li>
+            <li class="page-item" th:classappend="${studyGroupPage.number + 1 == studyGroupPage.totalPages ? 'disabled' : ''}">
+                <a class="page-link" th:href="@{/study-groups(page=${studyGroupPage.number + 1}, keyword=${keyword}, tags=${#strings.arrayJoin(selectedTags, ',')})}"
+                   aria-label="Next">
+                    <span aria-hidden="true">&raquo;</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</div>
+</body>
+</html>
