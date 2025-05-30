@@ -1,5 +1,8 @@
 package demo.having.domain.user.controller;
 
+import demo.having.domain.user.entity.CustomOAuth2User;
+import demo.having.domain.user.service.UserService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -12,19 +15,24 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/user")
+@RequiredArgsConstructor // UserService 주입받을 경우
 public class UserController {
 
+    private final UserService userService; // 필요 시
+
     @GetMapping("/me")
-    public ResponseEntity<?> getCurrentUser(@AuthenticationPrincipal OAuth2User principal) {
+    public ResponseEntity<?> getCurrentUser(@AuthenticationPrincipal CustomOAuth2User principal) { // CustomOAuth2User로 타입 지정
         if (principal == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
 
-        // 커스텀 OAuth2User를 썼다면 캐스팅 필요
+        // CustomOAuth2User에서 직접 User 엔티티를 가져와 필요한 정보를 반환
         return ResponseEntity.ok(Map.of(
-                "email", principal.getAttribute("email"),
-                "nickname", principal.getAttribute("name"), // 혹은 별도로 저장한 닉네임
-                "profileImageUrl", principal.getAttribute("picture") // 구글은 picture, 카카오는 profile_image
+                "userId", principal.getUser().getUserId(),
+                "email", principal.getUser().getEmail(),
+                "nickname", principal.getUser().getNickname(),
+                "profileImageUrl", principal.getUser().getProfileImageUrl(),
+                "role", principal.getUser().getRole().getKey() // 역할도 포함
         ));
     }
 }

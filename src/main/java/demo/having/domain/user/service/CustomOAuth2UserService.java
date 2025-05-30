@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collections;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -27,27 +28,29 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
     public OAuth2User loadUser(OAuth2UserRequest request) throws OAuth2AuthenticationException {
         OAuth2User oAuth2User = super.loadUser(request);
 
-        String provider = request.getClientRegistration().getRegistrationId();
+        String registrationId = request.getClientRegistration().getRegistrationId(); // google, kakao 등
 
-        // 제공자별로 다른 속성 처리
-        OAuthAttributes attributes = OAuthAttributes.of(provider,
-                oAuth2User.getAttributes());
+        OAuthAttributes attributes = OAuthAttributes.of(registrationId, oAuth2User.getAttributes());
 
-        User user = saveOrUpdate(attributes, provider);
+        User user = saveOrUpdate(attributes); // toEntity 호출 시 provider 인자 제거
 
-        return new
-                CustomOAuth2User(
-                Collections.singleton(new SimpleGrantedAuthority("ROLE_" + user.getRole())),
+        // user.getRole()이 이제 Role Enum 타입이므로, getKey()를 호출하여 "ROLE_USER" 형태의 문자열을 얻음
+        return new CustomOAuth2User(
+                Collections.singleton(new SimpleGrantedAuthority(user.getRole().getKey())),
                 attributes.getAttributes(),
                 attributes.getNameAttributeKey(),
                 user
         );
     }
 
-    private User saveOrUpdate(OAuthAttributes attributes, String provider) {
-        User user = userRepository.findByProviderAndProviderId(provider, attributes.getProviderId())
-                .map(entity -> entity.update(attributes.getNickname(), attributes.getPicture()))
-                .orElseGet(() -> attributes.toEntity(provider));
+    private User saveOrUpdate(OAuthAttributes attributes) { // provider 인자 제거
+
+        Optional<User> existingUser = userRepository.findByProviderAndProviderId(attributes.getProvider().name(), attributes.getProviderId());
+
+        User user = existingUser.map(entity -> {
+            entity.update(attributes.getNickname(), attributes.getPicture());
+            return entity;
+        }).orElseGet(() -> attributes.toEntity());
 
         return userRepository.save(user);
     }

@@ -1,8 +1,21 @@
 package demo.having.domain.user.entity;
 
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+
+@Getter
+@RequiredArgsConstructor
 public enum Provider {
-    LOCAL,    // 자체 회원가입
-    GOOGLE,   // 구글 OAuth2
-    KAKAO,    // 카카오 OAuth2
-    NAVER     // 네이버 OAuth2 (추후 확장 시)
+    GOOGLE,
+    KAKAO;
+
+    // String 값을 Enum으로 변환할 때 사용할 수 있는 정적 팩토리 메서드
+    public static Provider fromString(String text) {
+        for (Provider p : Provider.values()) {
+            if (p.name().equalsIgnoreCase(text)) {
+                return p;
+            }
+        }
+        throw new IllegalArgumentException("No enum constant for provider: " + text);
+    }
 }

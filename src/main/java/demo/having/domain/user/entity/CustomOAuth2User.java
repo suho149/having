@@ -35,6 +35,10 @@ public class CustomOAuth2User implements OAuth2User, UserDetails {
 
     @Override
     public String getName() {
+        // OAuth2User의 'name'은 공급자가 식별하는 고유한 ID여야 합니다.
+        // Google은 'sub', Kakao는 'id'를 사용합니다.
+        // OAuthAttributes에서 nameAttributeKey를 주입받아 사용하고 있으니, 기존 방식 유지 가능.
+        // 또는 user.getProviderId()를 반환하는 것도 고려해 볼 수 있습니다.
         return attributes.get(nameAttributeKey).toString();
     }
 
@@ -45,7 +49,7 @@ public class CustomOAuth2User implements OAuth2User, UserDetails {
 
     @Override
     public String getPassword() {
-        return user.getPassword();
+        return user.getPassword(); // 일반 로그인도 지원한다면
     }
 
     @Override

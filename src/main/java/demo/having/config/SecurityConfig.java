@@ -14,6 +14,8 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.AuthenticationFailureHandler;
+import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 
 @Configuration
 @EnableWebSecurity
@@ -21,9 +23,9 @@ import org.springframework.security.web.SecurityFilterChain;
 public class SecurityConfig {
 
     private final CustomOAuth2UserService oAuth2UserService;
-    private final OAuth2AuthenticationSuccessHandler successHandler;
-    private final OAuth2AuthenticationFailureHandler failureHandler;
-    private final CustomUserDetailsService customUserDetailsService;
+    private final AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler; // 필드명 변경
+    private final AuthenticationFailureHandler oAuth2AuthenticationFailureHandler; // 필드명 변경
+    private final CustomUserDetailsService customUserDetailsService; // 일반 로그인 사용 시
 
     @Bean
     public PasswordEncoder passwordEncoder() {
@@ -39,16 +41,13 @@ public class SecurityConfig {
                         .requestMatchers("/", "/login", "/login/**", "/css/**", "/js/**", "/images/**", "/webjars/**", "/error").permitAll()
                         .requestMatchers(HttpMethod.GET, "/study-groups", "/study-groups/{id:[0-9]+}").permitAll()
 
-                        // 관리자 경로
-                        .requestMatchers("/admin/**").hasRole("ADMIN")
+                        // 관리자 경로 (Role Enum의 key 사용)
+                        .requestMatchers("/admin/**").hasRole("ADMIN") // Role.ADMIN.getKey()는 "ROLE_ADMIN"이므로 hasRole은 "ADMIN"만 씀
 
-                        // 로그아웃 엔드포인트는 인증된 사용자가 접근할 수 있도록 명시 (또는 permitAll() 후 서비스단에서 처리)
-                        // .requestMatchers("/logout").authenticated() // 아래 logout 설정에서 permitAll()로 처리했으므로 여기선 불필요할 수 있음
-
-                        // 🚨 인증이 필요한 경로 (문제의 경로 포함)
+                        // 인증이 필요한 경로
                         .requestMatchers("/dashboard", "/my-studies", "/schedule", "/messages", "/profile").authenticated()
-                        .requestMatchers("/study-groups/new").authenticated() // "새 스터디 그룹 만들기" 폼 접근
-                        .requestMatchers(HttpMethod.POST, "/study-groups").authenticated() // 폼 제출
+                        .requestMatchers("/study-groups/new").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/study-groups").authenticated()
 
                         // 그 외 모든 요청은 인증 필요
                         .anyRequest().authenticated()
@@ -58,18 +57,30 @@ public class SecurityConfig {
                         .userInfoEndpoint(userInfo -> userInfo
                                 .userService(oAuth2UserService)
                         )
-                        .successHandler(successHandler)
-                        .failureHandler(failureHandler)
+                        .successHandler(oAuth2AuthenticationSuccessHandler) // 필드명 변경
+                        .failureHandler(oAuth2AuthenticationFailureHandler) // 필드명 변경
                 )
                 .logout(logout -> logout
                         .logoutUrl("/logout")
                         .logoutSuccessUrl("/?logout")
                         .invalidateHttpSession(true)
                         .deleteCookies("JSESSIONID")
-                        .permitAll() // 로그아웃 처리는 모두에게 허용
+                        .permitAll()
                 )
-                .userDetailsService(customUserDetailsService);
+                // 일반 로그인 (ID/PW)을 위해 UserDetailsService를 사용한다면
+                .userDetailsService(customUserDetailsService); // 주석 처리 또는 제거 가능 (순수 OAuth2만 할 경우)
 
         return http.build();
+    }
+
+    // SecurityConfig 내에 Bean으로 직접 선언하여 주입받을 수 있도록 변경
+    @Bean
+    public AuthenticationSuccessHandler oAuth2AuthenticationSuccessHandler() {
+        return new OAuth2AuthenticationSuccessHandler();
+    }
+
+    @Bean
+    public AuthenticationFailureHandler oAuth2AuthenticationFailureHandler() {
+        return new OAuth2AuthenticationFailureHandler();
     }
 }

@@ -1,0 +1,314 @@
+<!--<!DOCTYPE html>-->
+<!--<html lang="ko" xmlns:th="http://www.thymeleaf.org">-->
+<!--<head>-->
+<!--    <meta charset="UTF-8">-->
+<!--    <meta name="viewport" content="width=device-width, initial-scale=1.0">-->
+<!--    <title>새 스터디 그룹 만들기 - StudyGroup</title>-->
+<!--    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">-->
+<!--    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">-->
+<!--    <style>-->
+<!--        body {-->
+<!--            background-color: #f8f9fa;-->
+<!--        }-->
+<!--        .container {-->
+<!--            max-width: 800px;-->
+<!--            margin-top: 50px;-->
+<!--            margin-bottom: 50px;-->
+<!--        }-->
+<!--        .card {-->
+<!--            border: none;-->
+<!--            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);-->
+<!--            border-radius: 10px;-->
+<!--        }-->
+<!--        .card-header {-->
+<!--            background-color: #667eea;-->
+<!--            color: white;-->
+<!--            border-top-left-radius: 10px;-->
+<!--            border-top-right-radius: 10px;-->
+<!--            padding: 1.5rem;-->
+<!--            text-align: center;-->
+<!--        }-->
+<!--        .form-control:focus {-->
+<!--            border-color: #667eea;-->
+<!--            box-shadow: 0 0 0 0.25rem rgba(102, 126, 234, 0.25);-->
+<!--        }-->
+<!--        .btn-primary {-->
+<!--            background: linear-gradient(45deg, #667eea, #764ba2);-->
+<!--            border: none;-->
+<!--            transition: all 0.3s ease;-->
+<!--        }-->
+<!--        .btn-primary:hover {-->
+<!--            background: linear-gradient(45deg, #764ba2, #667eea);-->
+<!--            transform: translateY(-2px);-->
+<!--        }-->
+<!--        .alert {-->
+<!--            margin-top: 15px;-->
+<!--        }-->
+<!--    </style>-->
+<!--</head>-->
+<!--<body>-->
+<!--<div class="container">-->
+<!--    <div class="card">-->
+<!--        <div class="card-header">-->
+<!--            <h3 class="mb-0"><i class="fas fa-plus-circle me-2"></i>새 스터디 그룹 만들기</h3>-->
+<!--        </div>-->
+<!--        <div class="card-body p-4">-->
+<!--            <div th:if="${successMessage}" class="alert alert-success alert-dismissible fade show" role="alert">-->
+<!--                <span th:text="${successMessage}"></span>-->
+<!--                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>-->
+<!--            </div>-->
+<!--            <div th:if="${errorMessage}" class="alert alert-danger alert-dismissible fade show" role="alert">-->
+<!--                <span th:text="${errorMessage}"></span>-->
+<!--                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>-->
+<!--            </div>-->
+
+<!--            <form th:action="@{/study-groups/new}" th:object="${studyGroupCreateDto}" method="post">-->
+<!--                <div class="mb-3">-->
+<!--                    <label for="name" class="form-label">스터디 이름 <span class="text-danger">*</span></label>-->
+<!--                    <input type="text" id="name" th:field="*{name}" class="form-control"-->
+<!--                           th:classappend="${#fields.hasErrors('name')} ? 'is-invalid' : ''"-->
+<!--                           placeholder="예: 스프링 부트 정복 스터디" required>-->
+<!--                    <div class="invalid-feedback" th:errors="*{name}"></div>-->
+<!--                </div>-->
+
+<!--                <div class="mb-3">-->
+<!--                    <label for="description" class="form-label">설명</label>-->
+<!--                    <textarea id="description" th:field="*{description}" class="form-control" rows="4"-->
+<!--                              th:classappend="${#fields.hasErrors('description')} ? 'is-invalid' : ''"-->
+<!--                              placeholder="스터디 목표, 진행 방식, 대상 등을 자세히 설명해주세요."></textarea>-->
+<!--                    <div class="invalid-feedback" th:errors="*{description}"></div>-->
+<!--                </div>-->
+
+<!--                <div class="mb-3">-->
+<!--                    <label for="category" class="form-label">카테고리 <span class="text-danger">*</span></label>-->
+<!--                    <input type="text" id="category" th:field="*{category}" class="form-control"-->
+<!--                           th:classappend="${#fields.hasErrors('category')} ? 'is-invalid' : ''"-->
+<!--                           placeholder="예: 웹 개발, 알고리즘, 자격증, 어학" required>-->
+<!--                    <div class="invalid-feedback" th:errors="*{category}"></div>-->
+<!--                </div>-->
+
+<!--                <div class="mb-3">-->
+<!--                    <label for="maxMembers" class="form-label">최대 멤버 수 <span class="text-danger">*</span></label>-->
+<!--                    <input type="number" id="maxMembers" th:field="*{maxMembers}" class="form-control"-->
+<!--                           th:classappend="${#fields.hasErrors('maxMembers')} ? 'is-invalid' : ''"-->
+<!--                           min="2" required>-->
+<!--                    <div class="invalid-feedback" th:errors="*{maxMembers}"></div>-->
+<!--                </div>-->
+
+<!--                <div class="mb-3">-->
+<!--                    <label for="locationType" class="form-label">장소 유형 <span class="text-danger">*</span></label>-->
+<!--                    <select id="locationType" th:field="*{locationType}" class="form-select"-->
+<!--                            th:classappend="${#fields.hasErrors('locationType')} ? 'is-invalid' : ''" required>-->
+<!--                        <option value="">선택</option>-->
+<!--                        <option th:each="type : ${locationTypes}"-->
+<!--                                th:value="${type}"-->
+<!--                                th:text="${type == 'ONLINE' ? '온라인' : (type == 'OFFLINE' ? '오프라인' : '온/오프라인 병행')}">-->
+<!--                            온라인-->
+<!--                        </option>-->
+<!--                    </select>-->
+<!--                    <div class="invalid-feedback" th:errors="*{locationType}"></div>-->
+<!--                </div>-->
+
+<!--                <div class="mb-3">-->
+<!--                    <label for="locationDetail" class="form-label">상세 장소 (선택 사항)</label>-->
+<!--                    <input type="text" id="locationDetail" th:field="*{locationDetail}" class="form-control"-->
+<!--                           th:classappend="${#fields.hasErrors('locationDetail')} ? 'is-invalid' : ''"-->
+<!--                           placeholder="예: 구글 밋, ZOOM 링크, 강남역 스터디룸">-->
+<!--                    <div class="invalid-feedback" th:errors="*{locationDetail}"></div>-->
+<!--                </div>-->
+
+<!--                <div class="row mb-3">-->
+<!--                    <div class="col-md-6">-->
+<!--                        <label for="startDate" class="form-label">시작일 <span class="text-danger">*</span></label>-->
+<!--                        <input type="date" id="startDate" th:field="*{startDate}" class="form-control"-->
+<!--                               th:classappend="${#fields.hasErrors('startDate')} ? 'is-invalid' : ''" required>-->
+<!--                        <div class="invalid-feedback" th:errors="*{startDate}"></div>-->
+<!--                    </div>-->
+<!--                    <div class="col-md-6">-->
+<!--                        <label for="endDate" class="form-label">종료일 (선택 사항)</label>-->
+<!--                        <input type="date" id="endDate" th:field="*{endDate}" class="form-control"-->
+<!--                               th:classappend="${#fields.hasErrors('endDate')} ? 'is-invalid' : ''">-->
+<!--                        <div class="invalid-feedback" th:errors="*{endDate}"></div>-->
+<!--                    </div>-->
+<!--                </div>-->
+
+<!--                <div class="d-grid gap-2">-->
+<!--                    <button type="submit" class="btn btn-primary btn-lg">스터디 그룹 생성</button>-->
+<!--                    <a href="/dashboard" class="btn btn-secondary btn-lg">취소</a>-->
+<!--                </div>-->
+<!--            </form>-->
+<!--        </div>-->
+<!--    </div>-->
+<!--</div>-->
+
+<!--<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>-->
+<!--</body>-->
+<!--</html>-->
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>새 스터디 그룹 생성 - StudyGroup</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        .container {
+            max-width: 700px;
+            margin-top: 50px;
+            margin-bottom: 50px;
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+        h2 {
+            color: #667eea;
+            margin-bottom: 30px;
+            font-weight: bold;
+            text-align: center;
+        }
+        .btn-primary {
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            border: none;
+        }
+        .btn-primary:hover {
+            opacity: 0.9;
+        }
+        .form-check-label {
+            margin-left: 0.5rem;
+        }
+        /* Choices.js 스타일 오버라이드 */
+        .choices__inner {
+            background-color: #fff;
+            border: 1px solid #ced4da;
+            border-radius: 0.25rem;
+            padding: 0.375rem 0.75rem;
+            min-height: calc(1.5em + 0.75rem + 2px); /* Bootstrap form-control height */
+        }
+        .choices__input {
+            width: auto !important; /* Allow input to size naturally */
+        }
+        .choices__list--multiple .choices__item {
+            background-color: #e2e6ea;
+            border: 1px solid #dae0e5;
+            color: #495057;
+            padding: 0.25rem 0.6rem;
+            border-radius: 0.25rem;
+            font-size: 0.875em;
+        }
+        .choices__item.is-highlighted {
+            background-color: #667eea !important;
+            color: white !important;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>새 스터디 그룹 만들기</h2>
+    <div th:if="${errorMessage}" class="alert alert-danger" role="alert">
+        <span th:text="${errorMessage}"></span>
+    </div>
+    <form th:action="@{/study-groups/new}" th:object="${studyGroupCreateDto}" method="post">
+        <div class="mb-3">
+            <label for="name" class="form-label">스터디 이름</label>
+            <input type="text" id="name" th:field="*{name}" class="form-control"
+                   th:classappend="${#fields.hasErrors('name')} ? 'is-invalid'" placeholder="예: 스프링 부트 심화 스터디">
+            <div class="invalid-feedback" th:errors="*{name}"></div>
+        </div>
+
+        <div class="mb-3">
+            <label for="description" class="form-label">스터디 설명</label>
+            <textarea id="description" th:field="*{description}" class="form-control" rows="5"
+                      th:classappend="${#fields.hasErrors('description')} ? 'is-invalid'"
+                      placeholder="스터디 목표, 진행 방식, 대상, 커리큘럼 등을 상세히 작성해 주세요."></textarea>
+            <div class="invalid-feedback" th:errors="*{description}"></div>
+        </div>
+
+        <div class="mb-3">
+            <label for="tags" class="form-label">태그 (쉼표로 구분)</label>
+            <input type="text" id="tags" th:field="*{tags}" class="form-control"
+                   placeholder="예: Java, Spring, 알고리즘, 토익" data-role="tagsinput">
+            <div class="form-text">스터디를 설명하는 키워드를 입력하고 쉼표(,)로 구분해 주세요.</div>
+        </div>
+
+        <div class="mb-3">
+            <label for="maxMembers" class="form-label">최대 멤버 수</label>
+            <input type="number" id="maxMembers" th:field="*{maxMembers}" class="form-control"
+                   th:classappend="${#fields.hasErrors('maxMembers')} ? 'is-invalid'" min="2" max="100">
+            <div class="invalid-feedback" th:errors="*{maxMembers}"></div>
+        </div>
+
+        <div class="mb-3">
+            <label class="form-label">진행 방식</label>
+            <div>
+                <div th:each="type : ${locationTypes}" class="form-check form-check-inline">
+                    <input type="radio" th:id="${type.name()}" th:value="${type.name()}" th:field="*{locationType}" class="form-check-input"
+                           th:classappend="${#fields.hasErrors('locationType')} ? 'is-invalid'">
+                    <label th:for="${type.name()}" class="form-check-label" th:text="${type.name()}"></label>
+                </div>
+                <div class="invalid-feedback d-block" th:if="${#fields.hasErrors('locationType')}" th:errors="*{locationType}"></div>
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <label for="locationDetail" class="form-label">세부 진행 방식 (선택 사항)</label>
+            <input type="text" id="locationDetail" th:field="*{locationDetail}" class="form-control"
+                   placeholder="예: Zoom 사용, 강남역 스터디룸, 디스코드 보이스챗">
+        </div>
+
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label for="startDate" class="form-label">시작일</label>
+                <input type="date" id="startDate" th:field="*{startDate}" class="form-control"
+                       th:classappend="${#fields.hasErrors('startDate')} ? 'is-invalid'">
+                <div class="invalid-feedback" th:errors="*{startDate}"></div>
+            </div>
+            <div class="col-md-6 mb-3">
+                <label for="endDate" class="form-label">종료일 (선택 사항)</label>
+                <input type="date" id="endDate" th:field="*{endDate}" class="form-control"
+                       th:classappend="${#fields.hasErrors('endDate')} ? 'is-invalid'">
+                <div class="invalid-feedback" th:errors="*{endDate}"></div>
+            </div>
+        </div>
+
+        <div class="d-grid gap-2">
+            <button type="submit" class="btn btn-primary btn-lg">스터디 그룹 생성</button>
+            <a href="/dashboard" class="btn btn-secondary">취소</a>
+        </div>
+    </form>
+</div>
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/choices.js/public/assets/styles/choices.min.css" />
+<script src="https://cdn.jsdelivr.net/npm/choices.js/public/assets/scripts/choices.min.js"></script>
+<script>
+    // Choices.js 초기화 스크립트
+    document.addEventListener('DOMContentLoaded', function() {
+        var tagsInput = document.getElementById('tags');
+        // hiddenTags는 th:field="*{tags}"에 의해 자동 생성되므로 id가 필요 없습니다.
+        // 직접 참조해야 한다면 id를 부여해야 합니다.
+        // var hiddenTags = document.getElementById('hiddenTags'); // 이 줄은 이제 필요 없음
+
+        var choices = new Choices(tagsInput, {
+            delimiter: ',', // 태그 구분자
+            editItems: true, // 입력된 항목 수정 허용
+            removeItemButton: true, // 삭제 버튼 표시
+            duplicateItemsAllowed: false, // 중복 항목 허용 안 함
+            // 기타 옵션 (예: maxItemCount, addItems 등)
+        });
+
+        // Choices.js의 값이 변경될 때마다 hidden input에 업데이트
+        // th:field="*{tags}"가 있기 때문에, name="tags"로 사용하면 Spring이 자동으로 처리
+        // hidden input에 명시적으로 값을 설정할 필요가 없습니다.
+        // Choices.js가 <select multiple> 또는 <input type="text">에 대해 작동하므로,
+        // 최종적으로 name="tags"인 input에 쉼표로 구분된 문자열이 들어가도록만 하면 됩니다.
+        // Choices.js는 원래의 <input> 요소의 `value`를 업데이트하므로,
+        // Spring MVC는 이 `value`를 `List<String>`으로 자동으로 변환하여 DTO에 바인딩합니다.
+    });
+</script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

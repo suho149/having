@@ -107,7 +107,7 @@
                     <a class="nav-link active mb-1" href="/dashboard">
                         <i class="fas fa-tachometer-alt fa-fw me-2"></i>대시보드
                     </a>
-                    <a class="nav-link mb-1" href="/my-studies">
+                    <a class="nav-link mb-1" href="/study-groups/my-studies">
                         <i class="fas fa-book fa-fw me-2"></i>내 스터디
                     </a>
                     <a class="nav-link mb-1" href="/study-groups">
@@ -226,13 +226,22 @@
                             </div>
                             <div th:unless="${userStudies == null or #lists.isEmpty(userStudies)}">
                                 <div class="list-group list-group-flush">
-                                    <a th:each="study, iterStat : ${userStudies}" th:href="@{'/studies/' + ${study.id}}" class="list-group-item list-group-item-action">
+                                    <a th:each="study, iterStat : ${userStudies}" th:href="@{'/study-groups/' + ${study.studyGroupId}}" class="list-group-item list-group-item-action">
                                         <div class="d-flex w-100 justify-content-between">
                                             <h6 class="mb-1" th:text="${study.name}">스터디 이름 예시</h6>
-                                            <small th:text="${study.memberCount} + '명 참여중'">3일 전</small>
+                                            <small th:text="${study.currentMembersCount} + '명 참여중'">3일 전</small>
                                         </div>
-                                        <p class="mb-1" th:text="${study.shortDescription}">스터디에 대한 간략한 설명입니다.</p>
-                                        <small class="text-muted" th:text="'주제: ' + ${study.topic}">주제: 스프링 부트</small>
+                                        <p class="mb-1" th:text="${study.description}">스터디에 대한 간략한 설명입니다.</p>
+<!--                                        <small class="text-muted" th:text="'주제: ' + ${study.category}">주제: 스프링 부트</small>-->
+                                        <small class="text-muted">
+                                            주제:
+                                            <span th:if="${study.tags != null and !#lists.isEmpty(study.tags)}">
+                                            <span th:each="tag, iterStat : ${study.tags}">
+                                            <span th:text="${tag.name}"></span><span th:if="${!iterStat.last}">, </span>
+                                            </span>
+                                            </span>
+                                            <span th:if="${study.tags == null or #lists.isEmpty(study.tags)}">태그 없음</span>
+                                        </small>
                                     </a>
                                     <div th:if="${#lists.size(userStudies) < 2 && #lists.isEmpty(userStudies)}"> <a href="#" class="list-group-item list-group-item-action">
                                         <div class="d-flex w-100 justify-content-between">
@@ -247,7 +256,7 @@
                             </div>
                         </div>
                         <div class="card-footer bg-light text-center" th:if="${userStudies != null and not #lists.isEmpty(userStudies)}">
-                            <a href="/my-studies" class="btn btn-sm btn-outline-primary">모든 내 스터디 보기</a>
+                            <a href="/study-groups/my-studies" class="btn btn-sm btn-outline-primary">모든 내 스터디 보기</a>
                         </div>
                     </div>
                 </div>
@@ -270,29 +279,29 @@
                                             <span th:utext="${activity.description}">활동 내용</span>
                                         </div>
                                         <small class="text-muted" th:text="${activity.timeAgo}">시간</small>
-                                    </li>
-                                    <li th:if="${#lists.isEmpty(recentActivities)}">
-                                        <div class="list-group-item d-flex justify-content-between align-items-center">
-                                            <div>
-                                                <i class="fas fa-comment me-2 text-primary"></i>
-                                                <strong>새로운 메시지:</strong> "스터디 일정 변경 안내"가 도착했습니다.
-                                            </div>
-                                            <small class="text-muted">10분 전</small>
-                                        </div>
-                                        <div class="list-group-item d-flex justify-content-between align-items-center">
-                                            <div>
-                                                <i class="fas fa-calendar-check me-2 text-success"></i>
-                                                <strong>일정 추가:</strong> "주간 스터디 회의" 일정이 추가되었습니다.
-                                            </div>
-                                            <small class="text-muted">1시간 전</small>
-                                        </div>
-                                        <div class="list-group-item d-flex justify-content-between align-items-center">
-                                            <div>
-                                                <i class="fas fa-user-plus me-2 text-info"></i>
-                                                <strong>새 멤버:</strong> '코딩천재'님이 '스프링 마스터' 스터디에 가입했습니다.
-                                            </div>
-                                            <small class="text-muted">어제</small>
-                                        </div>
+<!--                                    </li>-->
+<!--                                    <li th:if="${#lists.isEmpty(recentActivities)}">-->
+<!--                                        <div class="list-group-item d-flex justify-content-between align-items-center">-->
+<!--                                            <div>-->
+<!--                                                <i class="fas fa-comment me-2 text-primary"></i>-->
+<!--                                                <strong>새로운 메시지:</strong> "스터디 일정 변경 안내"가 도착했습니다.-->
+<!--                                            </div>-->
+<!--                                            <small class="text-muted">10분 전</small>-->
+<!--                                        </div>-->
+<!--                                        <div class="list-group-item d-flex justify-content-between align-items-center">-->
+<!--                                            <div>-->
+<!--                                                <i class="fas fa-calendar-check me-2 text-success"></i>-->
+<!--                                                <strong>일정 추가:</strong> "주간 스터디 회의" 일정이 추가되었습니다.-->
+<!--                                            </div>-->
+<!--                                            <small class="text-muted">1시간 전</small>-->
+<!--                                        </div>-->
+<!--                                        <div class="list-group-item d-flex justify-content-between align-items-center">-->
+<!--                                            <div>-->
+<!--                                                <i class="fas fa-user-plus me-2 text-info"></i>-->
+<!--                                                <strong>새 멤버:</strong> '코딩천재'님이 '스프링 마스터' 스터디에 가입했습니다.-->
+<!--                                            </div>-->
+<!--                                            <small class="text-muted">어제</small>-->
+<!--                                        </div>-->
                                     </li>
                                 </ul>
                             </div>

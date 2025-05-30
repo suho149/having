@@ -18,11 +18,15 @@ public class Attendance {
     private Long attendanceId;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "schedule_id", nullable = false)
     private Schedule schedule;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    private String status;
-    private LocalDateTime attendedAt;
+    @Enumerated(EnumType.STRING)
+    private AttendanceStatus status; // Enum 사용
+
+    private LocalDateTime attendedAt; // 출석 기록 시간
 }
